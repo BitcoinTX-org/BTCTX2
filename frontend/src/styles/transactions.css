@@ -86,12 +86,12 @@
     display: grid;
     /* Example layout with 8 columns (adjust widths as needed) */
     grid-template-columns:
-      55px   /* time-col    */
-      60px   /* type-col    */
-      70px   /* account-col */
-      110px  /* amount-col  */
-      110px  /* fee-col     */
-      100px  /* extra-col   */
+      100px   /* time-col    */
+      100px   /* type-col    */
+      150px   /* account-col */
+      200px  /* amount-col  */
+      150px  /* fee-col     */
+      50px  /* extra-col   */
       1fr  /* disposal-col*/
       45px;  /* edit button */
   
@@ -105,6 +105,14 @@
     transition: background-color 0.2s;
     font-size: 0.75rem; /* adjust as needed */
   }  
+
+  /* Right-align the disposal text and leave space
+   before the Edit button. */
+.disposal-col {
+  text-align: right;
+  margin-right: 5px;  /* tweak as you wish */
+}
+
 
 /* A special class for the Account cell so it can wrap */
 .account-cell {
