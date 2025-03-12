@@ -201,15 +201,16 @@ class SPAStaticFiles(StaticFiles):
             else:
                 raise
 
+# Mount the built frontend at the root, so the SPA loads at "/"
 app.mount("/", SPAStaticFiles(directory="frontend/dist", html=True), name="static")
 
 # ---------------------------------------------------------
-# Root Route
+# Health/Info Route (Moved from "/")
 # ---------------------------------------------------------
-@app.get("/")
-def read_root():
+@app.get("/api/info")
+def read_info():
     """
-    Basic root path to confirm the API is running.
+    Basic route to confirm the API is running (no longer at root path).
     """
     return {"message": "Welcome to BitcoinTX - Double-Entry Accounting Ready!"}
 

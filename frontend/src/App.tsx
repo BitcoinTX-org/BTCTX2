@@ -56,11 +56,11 @@ const App: React.FC = () => {
     <Routes>
       {/*
         Redirect root URL ("/") to /dashboard by default.
-        But if user isn't logged in, PrivateRoute will bounce them to /login.
+        The PrivateRoute component will bounce unauthenticated users to /login.
       */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* PROTECTED ROUTES: wrapped in PrivateRoute */}
+      {/* PROTECTED ROUTES */}
       <Route
         path="/dashboard"
         element={
@@ -110,11 +110,11 @@ const App: React.FC = () => {
         }
       />
 
-      {/* PUBLIC ROUTES: Login & Register */}
+      {/* PUBLIC ROUTES */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Fallback catch-all: back to /dashboard (which is also protected) */}
+      {/* CATCH-ALL */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
