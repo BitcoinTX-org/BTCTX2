@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
-import api from "../api"; // Centralized API client
+import axios from "axios"; // to use `axios.isAxiosError`
+import api from "../api"; // Your centralized API client (with baseURL="/api")
 import "../styles/settings.css";
 
 interface ApiErrorResponse {
@@ -21,9 +21,9 @@ const Settings: React.FC = () => {
     setLoading(true);
     setMessage("");
     try {
-      await axios.post("/api/logout", {}, { withCredentials: true });
+      // baseURL="/api" => final: POST /api/logout
+      await api.post("/logout", {});
       setMessage("You have been logged out.");
-      // Redirect to /login
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
@@ -35,52 +35,67 @@ const Settings: React.FC = () => {
 
   // -------------------------------------------------------
   // 2) Reset Username & Password (without deleting transactions)
-  //    For single-user scenario: fetch the user, patch them
   // -------------------------------------------------------
   const handleResetCredentials = async (): Promise<void> => {
     const confirmed = window.confirm(
       "This will reset your username and password, but keep existing transactions.\n\nContinue?"
     );
     if (!confirmed) return;
-
+  
     setLoading(true);
     setMessage("");
     try {
-      // 1) Get the list of users (assuming single-user scenario)
+      // => GET /api/users
       const usersResp = await api.get("/users");
       const users = usersResp.data as { id: number; username: string }[];
-
+  
       if (users.length > 0) {
         const userId = users[0].id;
-        // 2) Prompt for new username/password or just set placeholders
+  
         const newUsername = prompt("Enter new username", "NewUser");
         if (!newUsername) {
           setMessage("Username reset canceled.");
           setLoading(false);
           return;
         }
-
+  
         const newPassword = prompt("Enter new password", "Pass1234!");
         if (!newPassword) {
           setMessage("Password reset canceled.");
           setLoading(false);
           return;
         }
-
-        // 3) Update user with new credentials
-        // This assumes a PATCH or PUT /users/{userId} can accept { username, password }
+  
+        // => PATCH /api/users/{userId}
         await api.patch(`/users/${userId}`, {
           username: newUsername,
-          password: newPassword
+          password: newPassword,
         });
-
+  
         setMessage("Username & password have been reset. Please log in with your new credentials.");
       } else {
         setMessage("No user found to reset credentials.");
       }
     } catch (error) {
       console.error("Reset credentials error:", error);
-      setMessage("Failed to reset credentials. Check console for more details.");
+  
+      if (axios.isAxiosError(error)) {
+        // The server might return an object/array in error.response?.data
+        const responseData = error.response?.data;
+        // We ensure setMessage() always gets a string:
+        if (responseData && typeof responseData === "object") {
+          // Convert object/array to a string so React doesn't crash
+          setMessage(JSON.stringify(responseData));
+        } else {
+          // Fallback: a plain string from detail or the error message
+          const detailMsg = (responseData as ApiErrorResponse)?.detail;
+          setMessage(detailMsg ?? String(responseData ?? error.message ?? "Unknown error occurred."));
+        }
+      } else if (error instanceof Error) {
+        setMessage(error.message);
+      } else {
+        setMessage("An unknown error occurred while resetting credentials.");
+      }
     } finally {
       setLoading(false);
     }
@@ -98,12 +113,13 @@ const Settings: React.FC = () => {
     setLoading(true);
     setMessage("");
     try {
-      await api.delete<ApiErrorResponse>("/transactions/delete_all");
+      // => DELETE /api/transactions/delete_all
+      await api.delete("/transactions/delete_all");
       setMessage("All transactions have been successfully deleted.");
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error deleting transactions:", error);
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        const detailMsg = error.response?.data?.detail;
+      if (axios.isAxiosError(error)) {
+        const detailMsg = (error.response?.data as ApiErrorResponse)?.detail;
         const fallbackMsg = error.message || "Failed to delete transactions.";
         setMessage(detailMsg ?? fallbackMsg);
       } else if (error instanceof Error) {
@@ -117,7 +133,7 @@ const Settings: React.FC = () => {
   };
 
   // -------------------------------------------------------
-  // 4) Reset Account:
+  // 4) Reset Account
   //    - Delete all transactions
   //    - Delete the single user
   //    - Redirect to /register
@@ -133,15 +149,16 @@ const Settings: React.FC = () => {
     setLoading(true);
     setMessage("");
     try {
-      // 1) Delete all transactions
+      // => DELETE /api/transactions/delete_all
       await api.delete("/transactions/delete_all");
 
-      // 2) Get the user & delete them
+      // => GET /api/users
       const usersResp = await api.get("/users");
       const users = usersResp.data as { id: number; username: string }[];
 
       if (users.length > 0) {
         const userId = users[0].id;
+        // => DELETE /api/users/{userId}
         await api.delete(`/users/${userId}`);
       }
 
@@ -149,7 +166,14 @@ const Settings: React.FC = () => {
       window.location.href = "/register";
     } catch (error) {
       console.error("Reset account error:", error);
-      setMessage("Failed to reset account. Check console for more details.");
+      if (axios.isAxiosError(error)) {
+        const detailMsg = (error.response?.data as ApiErrorResponse)?.detail;
+        setMessage(detailMsg ?? "Failed to reset account. Check console for more details.");
+      } else if (error instanceof Error) {
+        setMessage(error.message);
+      } else {
+        setMessage("An unknown error occurred while resetting the account.");
+      }
     } finally {
       setLoading(false);
     }
@@ -208,7 +232,9 @@ const Settings: React.FC = () => {
         <div className="settings-option">
           <div>
             <span className="settings-option-title">Delete All Transactions</span>
-            <p className="settings-option-subtitle">Removes all transaction history. This cannot be undone.</p>
+            <p className="settings-option-subtitle">
+              Removes all transaction history. This cannot be undone.
+            </p>
           </div>
           <button
             onClick={handleDeleteTransactions}
@@ -235,7 +261,6 @@ const Settings: React.FC = () => {
             {loading ? "Processing..." : "Reset Account"}
           </button>
         </div>
-
       </div>
 
       {/* =========================

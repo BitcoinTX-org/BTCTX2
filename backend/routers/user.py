@@ -95,7 +95,7 @@ def get_users(db: Session = Depends(get_db)):
     """
     return get_all_users(db)
 
-@router.patch("/users/{user_id}", response_model=UserRead)
+@router.patch("/{user_id}", response_model=UserRead)
 def patch_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db)):
     """
     Partially update a user's fields (username or password) using UserUpdate.

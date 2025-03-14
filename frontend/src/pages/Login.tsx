@@ -1,45 +1,33 @@
 // frontend/src/pages/Login.tsx
-//new
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // Import from react-router-dom
+import { useNavigate } from 'react-router-dom';
+import api from '../api'; // <-- Import your custom API instance instead of raw axios
 import '../styles/login.css';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  
-  // useNavigate hook for client-side transitions without reload
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Send credentials to /api/login with session cookie
-      const response = await axios.post(
-        '/api/login',
-        { username, password },
-        { withCredentials: true }
-      );
+      // Because baseURL is "/api", calling "/login" => "/api/login"
+      const response = await api.post('/login', { username, password });
 
-      // If successful, the backend sets the session; we can log response data if needed
       console.log(response.data);
-      
-      // Notify user, then redirect
+
       alert('Logged in successfully!');
       navigate('/dashboard');
-
     } catch (error) {
       console.error('Login error:', error);
-      // If password invalid or user not found, the backend likely returns 401
-      alert('Login failed. Please check your username/password or try again.');
+      alert('Login failed. Please check your username/password and try again.');
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-header">
-        {/* Optionally replace with your actual logo path */}
         <img src="/icon.svg" alt="BitcoinTX Logo" className="login-logo" />
         <h1 className="login-title">Welcome to BitcoinTX</h1>
       </div>

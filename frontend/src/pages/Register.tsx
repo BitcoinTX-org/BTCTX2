@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../api'; // <<-- Import your custom Axios instance
 
 /**
  * A simple registration page for a single-user system.
- * 
+ *
  * Key points:
- *  - We call POST /api/users/register (which your FastAPI backend defines).
- *  - We include withCredentials: true to allow session cookies.
- *  - On success, we can either auto-login or redirect the user to a login page.
+ *  - We call POST /users/register (the baseURL "/api" in `api.ts` 
+ *    will prepend "/api", resulting in a final call to "/api/users/register").
+ *  - `withCredentials` is already set in `api.ts`.
+ *  - On success, we can auto-login or redirect to the login page.
  */
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -19,25 +20,15 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      // IMPORTANT: Use /api/users/register here.
-      const response = await axios.post(
-        '/api/users/register',
-        { username, password },
-        { withCredentials: true } // Required if your backend uses session cookies.
-      );
-
+      // Because `baseURL="/api"` in api.ts, calling /users/register => /api/users/register
+      const response = await api.post('/users/register', { username, password });
       console.log('Register response:', response.data);
 
       // ------------------------------------------------------
       // Option A: Auto-login the newly created user
       // ------------------------------------------------------
-      // If you want to automatically log them in after successful registration:
       /*
-      const loginResponse = await axios.post(
-        '/api/login',
-        { username, password },
-        { withCredentials: true }
-      );
+      const loginResponse = await api.post('/login', { username, password });
       console.log('Login response:', loginResponse.data);
       // Now that they're logged in, redirect to your main dashboard:
       window.location.href = '/dashboard';
@@ -52,7 +43,6 @@ const RegisterPage: React.FC = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      // Provide a user-friendly alert or UI message
       alert('Failed to register. Try another username.');
     }
   };

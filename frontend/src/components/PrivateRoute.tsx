@@ -1,7 +1,7 @@
-// PrivateRoute.tsx
+// FILE: PrivateRoute.tsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Navigate } from 'react-router-dom';
+import api from '../api'; // <- Custom Axios instance with baseURL="/api"
 
 interface PrivateRouteProps {
   children: JSX.Element;
@@ -13,8 +13,9 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
 
   useEffect(() => {
     // Attempt to hit a protected endpoint that checks session
-    axios
-      .get('/api/protected', { withCredentials: true })
+    // This will call GET /api/protected due to baseURL="/api"
+    api
+      .get('/protected')
       .then(() => {
         setIsAuthenticated(true);
         setLoading(false);

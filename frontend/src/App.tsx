@@ -27,7 +27,7 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   useEffect(() => {
     // Check session status by hitting a protected route
     axios
-      .get("/api/protected", { withCredentials: true })
+      .get("/protected", { withCredentials: true })
       .then(() => {
         setIsAuthenticated(true);
         setLoading(false);
